@@ -4,3 +4,4 @@ django-debug-toolbar
 django-allauth
 django-suit==0.2.25
 django-stdimage
+django-model-utils
