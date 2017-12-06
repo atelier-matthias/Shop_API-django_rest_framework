@@ -72,7 +72,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'Shop_API.wsgi.application'
-
+AUTH_USER_MODEL = 'api.CustomerProfile'
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
