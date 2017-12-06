@@ -1,18 +1,22 @@
+from django.shortcuts import redirect
+from rest_framework.reverse import reverse
+
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import api_view
 from rest_framework.authentication import authenticate
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView
+    GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
 from .serializers import UserSerializer, ProductListSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer, CustomerSerializer, UserLoginSerialization
+    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer
 from django.contrib.auth.models import User
 from .models import Product, Shop, Stock, Order, CustomerProfile
 
 
 class UserLogin(GenericAPIView):
-    serializer_class = UserLoginSerialization
+    serializer_class = UserLoginSerializer
 
     def post(self, request, *args, **kwargs):
         data = request.data
@@ -27,26 +31,36 @@ class UserLogin(GenericAPIView):
         return Response("success", status=200)
 
 
+class UserLogout(APIView):
+    def get(self, request):
+        logout(request)
+        return Response("user Logout", status=200)
 
-class UserList(ListAPIView, CreateAPIView):
-    queryset = User.objects.all()
+
+class RegisterUser(CreateAPIView):
+    serializer_class = UserRegisterSerializer
+
+
+class ProfileDetails(ListAPIView, UpdateAPIView):
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, ]
+
+    def get(self, request, *args, **kwargs):
+        return redirect('api:user_detail', userUuidStr=str(request.user.uuid))
 
 
-class UserDetails(RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
+class ProfileUpdate(RetrieveUpdateAPIView):
     serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'userUuidStr'
+
+    def get_queryset(self):
+        return CustomerProfile.objects.filter(uuid=self.request.user.uuid)
 
 
-class CustomerList(ListAPIView, CreateAPIView):
-    queryset = CustomerProfile.objects.all()
-    serializer_class = CustomerSerializer
-
-
-class ProductList(ListAPIView, CreateAPIView):
+class ProductList(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly,]
 
 
 class ShopList(ListAPIView, CreateAPIView):
@@ -57,11 +71,13 @@ class ShopList(ListAPIView, CreateAPIView):
 class StockList(ListAPIView, CreateAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockListSerializer
+    permission_classes = [IsAuthenticated, ]
 
 
 class OrderList(ListAPIView, CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
+    permission_classes = [IsAuthenticated, ]
 
 
 
