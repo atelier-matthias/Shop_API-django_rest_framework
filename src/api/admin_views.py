@@ -1,21 +1,16 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
-from rest_framework.decorators import api_view
-from rest_framework.authentication import authenticate
-from django.contrib.auth import login, logout
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView
+from rest_framework.permissions import IsAdminUser
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView
 from .serializers import UserSerializer, ProductListSerializer, AdminCustomerUpdateSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer
-from django.contrib.auth.models import User
+    StockListSerializer, ShopListSerializer, OrderListSerializer
 from .models import Product, Shop, Stock, Order, CustomerProfile
+from .paginationController import StandardPagination
 
 
 class AdminUserList(ListAPIView):
     queryset = CustomerProfile.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAdminUser,]
+    pagination_class = StandardPagination
 
 
 class AdminUserDetails(RetrieveUpdateDestroyAPIView):
@@ -47,3 +42,6 @@ class AdminOrderList(ListAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     permission_classes = [IsAdminUser, ]
+
+
+

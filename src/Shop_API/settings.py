@@ -29,7 +29,6 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'api',
     'rest_framework',
@@ -71,11 +70,14 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'Shop_API.wsgi.application'
-AUTH_USER_MODEL = 'api.CustomerProfile'
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100
+}
 
-# Database
-# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+WSGI_APPLICATION = 'Shop_API.wsgi.application'
+
+AUTH_USER_MODEL = 'api.CustomerProfile'
 
 DATABASES = {
     'default': {
@@ -84,10 +86,8 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -106,21 +106,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
-
 STATIC_URL = '/static/'
 
 def show_toolbar(request):
