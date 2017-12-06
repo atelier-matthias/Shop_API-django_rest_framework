@@ -3,15 +3,12 @@ from django.db import models
 from model_utils.models import StatusModel, SoftDeletableModel
 from model_utils import Choices
 from django.utils.timezone import now
+from django.contrib.auth.models import User
 
-class Customer(SoftDeletableModel):
-    customer_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    username = models.CharField(max_length=100)
-    phone_nr = models.IntegerField()
-    email = models.EmailField(max_length=40)
 
-    def __str__(self):
-        return self.email
+class CustomerProfile(User):
+    phone = models.CharField(max_length=20, blank=True, default='')
+    city = models.CharField(max_length=100, blank=True, default='')
 
 
 class Product(StatusModel, SoftDeletableModel):
@@ -56,14 +53,13 @@ class Order(StatusModel):
     )
     STATUS = Choices('new', 'to_pay', 'payed', 'error', 'returned')
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    customer_id = models.ForeignKey(Customer)
+    customer_id = models.ForeignKey(User)
     product_id = models.ForeignKey(Product)
     shop_id = models.ForeignKey(Shop)
     created = models.DateTimeField(default=now)
     paid = models.DateTimeField(blank=True, null=True)
     sum = models.DecimalField(max_digits=8, decimal_places=2)
     payment = models.CharField(max_length=20, choices=PAYMENT_TYPE, default=CASH)
-
 
 
 
