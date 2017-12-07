@@ -24,21 +24,22 @@ class AdminShopSerializer(serializers.RelatedField):
         return value.name
 
 
+class AdminProductSerializer(serializers.RelatedField):
+    def to_representation(self, value):
+        return value.name
+
+
 class AdminOrderProductSerializer(serializers.ModelSerializer):
-    def to_representation(self, instance):
-        res = dict()
-        res = {
-            'value': instance.value,
-            'quantity': instance.quantity,
-            'product': instance.product_uuid.name
-        }
-        return res
+    product = AdminProductSerializer(many=False, read_only=True)
+    class Meta:
+        model = OrderProducts
+        fields = ('product', 'quantity', 'value')
 
 
 class AdminOrdersSerializers(serializers.ModelSerializer):
-    order_orderproducts = AdminOrderProductSerializer(many=True, read_only=True)
-    shop_uuid = AdminShopSerializer(read_only=True)
+    ordered_products = AdminOrderProductSerializer(many=True, read_only=True)
+    shop = AdminShopSerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = ('status', 'order_uuid', 'customer_uuid', 'shop_uuid', 'sum', 'order_orderproducts')
+        fields = ('status', 'order_uuid', 'customer', 'shop', 'sum', 'ordered_products')
