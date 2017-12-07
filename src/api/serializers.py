@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
 from .models import Product, Shop, Stock, Order, CustomerProfile
 
 
@@ -19,16 +18,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-
-class AdminCustomerUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomerProfile
-        fields = '__all__'
-
-    def update(self, instance, validated_data):
-        instance.set_password(instance.password)
-        return instance
 
 
 class UserSerializer(serializers.ModelSerializer):
