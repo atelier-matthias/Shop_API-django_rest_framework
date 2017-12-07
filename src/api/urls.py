@@ -8,11 +8,19 @@ UUID_RE = r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA
 
 admin_routes = [
     url(r'^admin/customers/$', admin_views.AdminUserList.as_view(), name='admin_user_list'),
-    url(r'^admin/customers/(?P<userUuidStr>%s)/$' % UUID_RE, admin_views.AdminUserDetails.as_view(), name='admin_user_detail'),
+    url(r'^admin/customers/(?P<user_uuid>%s)/$' % UUID_RE, admin_views.AdminUserDetails.as_view(), name='admin_user_detail'),
     url(r'^admin/products/$', admin_views.AdminProductList.as_view(), name='admin_product_list'),
     url(r'^admin/shops/$', admin_views.AdminShopList.as_view(), name='admin_shop_list'),
     url(r'^admin/stocks/$', admin_views.AdminStockList.as_view(), name='admin_stock_list'),
+
     url(r'^admin/orders/$', admin_views.AdminOrderList.as_view(), name='admin_order_list'),
+    url(r'^admin/orders/(?P<order_uuid>%s)/$' % UUID_RE, admin_views.AdminOrderDetails.as_view(),
+        name='admin_order_details'),
+
+    url(r'^admin/buckets/$', admin_views.AdminShopBucketList.as_view(), name='admin_shopbuckets_list'),
+    url(r'^admin/buckets/(?P<bucket_uuid>%s)/$' % UUID_RE, admin_views.AdminShopBucketDetails.as_view(),
+        name='admin_shopbuckets_details'),
+
 ]
 
 
