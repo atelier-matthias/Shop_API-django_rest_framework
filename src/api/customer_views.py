@@ -3,14 +3,16 @@ from rest_framework.reverse import reverse
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import api_view
 from rest_framework.authentication import authenticate
 from django.contrib.auth import login, logout
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
-from .serializers import UserSerializer, ProductListSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer
+from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
+    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
+    UserUpdateDetailsSerializer, UserUpdatePasswordSerializer
 from django.contrib.auth.models import User
 from .models import Product, Shop, Stock, Order, CustomerProfile
 
@@ -41,22 +43,39 @@ class RegisterUser(CreateAPIView):
     serializer_class = UserRegisterSerializer
 
 
-class ProfileDetails(ListAPIView, UpdateAPIView):
-    serializer_class = UserSerializer
+class ProfileDetails(RetrieveAPIView):
+    queryset = CustomerProfile.objects.filter()
+    serializer_class = UserDetailsSerializer
     permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'pk'
 
     def get(self, request, *args, **kwargs):
-        return redirect('api:user_detail', userUuidStr=str(request.user.uuid))
+        self.kwargs.update({'pk': self.request.user.uuid})
+        user = self.get_object()
+        serializer = self.get_serializer(user).data
+        return Response(serializer)
 
 
-class ProfileUpdate(RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
+class ProfileUpdate(UpdateAPIView):
+    queryset = CustomerProfile.objects.all()
+    serializer_class = UserUpdateDetailsSerializer
     permission_classes = [IsAuthenticated, ]
-    lookup_url_kwarg = 'userUuidStr'
+    lookup_url_kwarg = 'pk'
 
-    def get_queryset(self):
-        return CustomerProfile.objects.filter(uuid=self.request.user.uuid)
+    def put(self, request, *args, **kwargs):
+        self.kwargs.update({'pk': self.request.user.uuid})
+        return self.update(request, *args, **kwargs)
 
+
+class ProfileUpdatePassword(UpdateAPIView):
+    queryset = CustomerProfile.objects.filter()
+    serializer_class = UserUpdatePasswordSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'pk'
+
+    def put(self, request, *args, **kwargs):
+        self.kwargs.update({'pk': self.request.user.uuid})
+        return self.update(request, *args, **kwargs)
 
 class ProductList(ListAPIView):
     queryset = Product.objects.all()

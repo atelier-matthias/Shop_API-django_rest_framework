@@ -20,16 +20,29 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
         fields = '__all__'
 
 
-class UserDetails(serializers.ModelSerializer):
+class UserUpdatePasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
-        fields = ('username', 'uuid')
+        fields = ('password',)
+
+    def update(self, instance, validated_data):
+        user = super(UserUpdatePasswordSerializer, self).update(instance, validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
+
+
+class UserUpdateDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerProfile
+        fields = ('email', 'first_name', 'last_name')
+
 
 
 class ProductListSerializer(serializers.ModelSerializer):
