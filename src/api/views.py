@@ -3,6 +3,7 @@ from rest_framework.reverse import reverse
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.decorators import api_view
 from rest_framework.authentication import authenticate
@@ -41,21 +42,24 @@ class RegisterUser(CreateAPIView):
     serializer_class = UserRegisterSerializer
 
 
-class ProfileDetails(ListAPIView, UpdateAPIView):
+class ProfileDetails(RetrieveAPIView):
+    queryset = CustomerProfile.objects.filter()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'pk'
 
     def get(self, request, *args, **kwargs):
-        return redirect('api:user_detail', userUuidStr=str(request.user.uuid))
+        self.kwargs.update({'pk': self.request.user.uuid})
+        user = self.get_object()
+        serializer = self.get_serializer(user).data
+        return Response(serializer)
 
 
 class ProfileUpdate(RetrieveUpdateAPIView):
+    queryset = CustomerProfile.objects.filter()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated, ]
     lookup_url_kwarg = 'userUuidStr'
-
-    def get_queryset(self):
-        return CustomerProfile.objects.filter(uuid=self.request.user.uuid)
 
 
 class ProductList(ListAPIView):
