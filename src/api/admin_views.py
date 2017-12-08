@@ -1,13 +1,14 @@
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView
-from .serializers import UserSerializer, ProductListSerializer, \
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, \
+    RetrieveAPIView
+from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     StockListSerializer, ShopListSerializer, OrderListSerializer
 from .admin_serializers import AdminCustomerUpdateSerializer, AdminShopBucketSerializer, AdminOrdersSerializers, \
     AdminShopSerializer, AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize
 from .models import Product, Shop, Stock, Order, CustomerProfile, ShopBucket, OrderProducts
-from .paginationController import StandardPagination
+from .pagination_controller import StandardPagination
 from django.db import transaction
 from .error_codes import ErrorCodes
 from datetime import datetime
@@ -15,12 +16,12 @@ from datetime import datetime
 
 class AdminUserList(ListAPIView):
     queryset = CustomerProfile.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserDetailsSerializer
     permission_classes = [IsAdminUser,]
     pagination_class = StandardPagination
 
 
-class AdminUserDetails(RetrieveUpdateDestroyAPIView):
+class AdminUserDetails(RetrieveUpdateAPIView):
     queryset = CustomerProfile.objects.all()
     serializer_class = AdminCustomerUpdateSerializer
     permission_classes = [IsAdminUser, ]

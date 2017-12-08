@@ -10,8 +10,9 @@ from rest_framework.authentication import authenticate
 from django.contrib.auth import login, logout
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
-from .serializers import UserSerializer, ProductListSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer
+from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
+    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
+    UserUpdateDetailsSerializer, UserUpdatePasswordSerializer
 from django.contrib.auth.models import User
 from .models import Product, Shop, Stock, Order, CustomerProfile
 
@@ -44,7 +45,7 @@ class RegisterUser(CreateAPIView):
 
 class ProfileDetails(RetrieveAPIView):
     queryset = CustomerProfile.objects.filter()
-    serializer_class = UserSerializer
+    serializer_class = UserDetailsSerializer
     permission_classes = [IsAuthenticated, ]
     lookup_url_kwarg = 'pk'
 
@@ -55,12 +56,26 @@ class ProfileDetails(RetrieveAPIView):
         return Response(serializer)
 
 
-class ProfileUpdate(RetrieveUpdateAPIView):
-    queryset = CustomerProfile.objects.filter()
-    serializer_class = UserSerializer
+class ProfileUpdate(UpdateAPIView):
+    queryset = CustomerProfile.objects.all()
+    serializer_class = UserUpdateDetailsSerializer
     permission_classes = [IsAuthenticated, ]
-    lookup_url_kwarg = 'userUuidStr'
+    lookup_url_kwarg = 'pk'
 
+    def put(self, request, *args, **kwargs):
+        self.kwargs.update({'pk': self.request.user.uuid})
+        return self.update(request, *args, **kwargs)
+
+
+class ProfileUpdatePassword(UpdateAPIView):
+    queryset = CustomerProfile.objects.filter()
+    serializer_class = UserUpdatePasswordSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'pk'
+
+    def put(self, request, *args, **kwargs):
+        self.kwargs.update({'pk': self.request.user.uuid})
+        return self.update(request, *args, **kwargs)
 
 class ProductList(ListAPIView):
     queryset = Product.objects.all()

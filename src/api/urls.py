@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from . import views, admin_views
+from . import customer_views, admin_views
 
 app_name = 'api'
 
@@ -25,19 +25,21 @@ admin_routes = [
 
 
 customer_routes = [
-    url(r'^login/$', views.UserLogin.as_view()),
-    url(r'^logout/$', views.UserLogout.as_view()),
-    url(r'^register/$', views.RegisterUser.as_view()),
-    url(r'^profile/$', views.ProfileDetails.as_view()),
+    url(r'^login/$', customer_views.UserLogin.as_view()),
+    url(r'^logout/$', customer_views.UserLogout.as_view()),
+    url(r'^register/$', customer_views.RegisterUser.as_view()),
+    url(r'^profile/$', customer_views.ProfileDetails.as_view()),
+    url(r'^profile/update$', customer_views.ProfileUpdate.as_view()),
+    url(r'^profile/updatepassword$', customer_views.ProfileUpdatePassword.as_view()),
 
-    url(r'^products/$', views.ProductList.as_view()),
-    url(r'^shops/$', views.ShopList.as_view()),
-    url(r'^stocks/$', views.StockList.as_view()),
-    url(r'^orders/$', views.OrderList.as_view()),
+    url(r'^products/$', customer_views.ProductList.as_view()),
+    url(r'^shops/$', customer_views.ShopList.as_view()),
+    url(r'^stocks/$', customer_views.StockList.as_view()),
+    url(r'^orders/$', customer_views.OrderList.as_view()),
 ]
 
 misc_routes = [
-    url(r'^hello/$', views.hello_world, name='hello_world'),
+    url(r'^hello/$', customer_views.hello_world, name='hello_world'),
 ]
 
 

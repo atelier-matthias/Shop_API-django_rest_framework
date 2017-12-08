@@ -9,8 +9,10 @@ class AdminCustomerUpdateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def update(self, instance, validated_data):
-        instance.set_password(instance.password)
-        return instance
+        user = super(AdminCustomerUpdateSerializer, self).update(instance, validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class AdminShopBucketSerializer(serializers.ModelSerializer):
