@@ -16,6 +16,8 @@ admin_routes = [
     url(r'^admin/orders/$', admin_views.AdminOrderList.as_view(), name='admin_order_list'),
     url(r'^admin/orders/(?P<order_uuid>%s)/$' % UUID_RE, admin_views.AdminOrderDetails.as_view(),
         name='admin_order_details'),
+    url(r'^admin/orders/(?P<order_uuid>%s)/set_paid$' % UUID_RE, admin_views.AdminOrderSetPaid.as_view(),
+        name='admin_order_set_paid'),
 
     url(r'^admin/buckets/$', admin_views.AdminShopBucketList.as_view(), name='admin_shopbuckets_list'),
     url(r'^admin/buckets/(?P<bucket_uuid>%s)/$' % UUID_RE, admin_views.AdminShopBucketDetails.as_view(),

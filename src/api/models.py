@@ -36,8 +36,8 @@ class Shop(StatusModel, SoftDeletableModel):
     shop_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, default=None)
 
-    def __str__(self):
-        return self.name
+    # def __str__(self):
+    #     return self.name
 
 
 class Stock(models.Model):
@@ -47,7 +47,20 @@ class Stock(models.Model):
     quantity = models.SmallIntegerField
 
 
-class Order(StatusModel):
+class Order(models.Model):
+    NEW = 'new'
+    TO_PAY = 'to_pay'
+    PAID = 'paid'
+    ERROR = 'error'
+    RETURNED = 'returned'
+    PAYMENT_STATUS = (
+        (NEW, 'new'),
+        (TO_PAY, 'to_pay'),
+        (PAID, 'paid'),
+        (ERROR, 'error'),
+        (RETURNED, 'returned')
+    )
+
     CASH = 'cash'
     PAYU = 'payu'
     CARD = 'card'
@@ -56,7 +69,7 @@ class Order(StatusModel):
         (PAYU, 'payu'),
         (CARD, 'card')
     )
-    STATUS = Choices('new', 'to_pay', 'payed', 'error', 'returned')
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default=NEW)
     order_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     customer = models.ForeignKey(CustomerProfile)
     shop = models.ForeignKey(Shop, related_name='shop_order')
