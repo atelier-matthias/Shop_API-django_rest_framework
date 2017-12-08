@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, Shop, Stock, Order, CustomerProfile
+from .models import Product, Shop, Stock, Order, CustomerProfile, ShopBucket
 
 
 class UserLoginSerializer(serializers.ModelSerializer):
@@ -44,7 +44,6 @@ class UserUpdateDetailsSerializer(serializers.ModelSerializer):
         fields = ('email', 'first_name', 'last_name')
 
 
-
 class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -69,4 +68,13 @@ class OrderListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class UserBucketDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopBucket
+        fields = ('quantity', 'product', 'value')
 
+
+class UserBucketAddProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopBucket
+        fields = ('quantity', 'product')

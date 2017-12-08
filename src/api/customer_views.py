@@ -1,6 +1,6 @@
 from django.shortcuts import redirect
 from rest_framework.reverse import reverse
-
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import mixins
@@ -12,9 +12,9 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
-    UserUpdateDetailsSerializer, UserUpdatePasswordSerializer
+    UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, UserBucketAddProductSerializer
 from django.contrib.auth.models import User
-from .models import Product, Shop, Stock, Order, CustomerProfile
+from .models import Product, Shop, Order, CustomerProfile, ShopBucket
 
 
 class UserLogin(GenericAPIView):
@@ -77,6 +77,7 @@ class ProfileUpdatePassword(UpdateAPIView):
         self.kwargs.update({'pk': self.request.user.uuid})
         return self.update(request, *args, **kwargs)
 
+
 class ProductList(ListAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
@@ -87,10 +88,36 @@ class ShopList(ListAPIView, CreateAPIView):
     serializer_class = ShopListSerializer
 
 
-class StockList(ListAPIView, CreateAPIView):
-    queryset = Stock.objects.all()
-    serializer_class = StockListSerializer
+class BucketDetails(RetrieveAPIView):
+    queryset = ShopBucket.objects.all()
+    serializer_class = UserBucketDetailsSerializer
     permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'pk'
+
+    def get(self, request, *args, **kwargs):
+        self.kwargs.update({'pk': self.request.user.uuid})
+        user = self.get_object()
+        serializer = self.get_serializer(user).data
+        return Response(serializer)
+
+
+class BucketAddProduct(CreateAPIView):
+    queryset = ShopBucket.objects.all()
+    serializer_class = UserBucketAddProductSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'pk'
+
+    def post(self, request, *args, **kwargs):
+        prod = dict()
+
+        product = Product.objects.get(product_uuid=request.POST['product'])
+        prod = request.data
+        prod['customer'] = self.request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class OrderList(ListAPIView, CreateAPIView):
