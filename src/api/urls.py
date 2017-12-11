@@ -29,13 +29,12 @@ customer_routes = [
     url(r'^logout/$', customer_views.UserLogout.as_view()),
     url(r'^register/$', customer_views.RegisterUser.as_view()),
     url(r'^profile/$', customer_views.ProfileDetails.as_view()),
-    url(r'^profile/update$', customer_views.ProfileUpdate.as_view()),
-    url(r'^profile/updatepassword$', customer_views.ProfileUpdatePassword.as_view()),
+    url(r'^profile/(?P<customer_uuid>%s)/$' % UUID_RE, customer_views.ProfileUpdate.as_view()),
+    url(r'^profile/(?P<customer_uuid>%s)/setpassword$' % UUID_RE, customer_views.ProfileUpdatePassword.as_view()),
 
     url(r'^products/$', customer_views.ProductList.as_view()),
     url(r'^shops/$', customer_views.ShopList.as_view()),
-    url(r'^bucket/$', customer_views.BucketDetails.as_view()),
-    url(r'^bucket/add$', customer_views.BucketAddProduct.as_view()),
+    # url(r'^stocks/$', customer_views.StockList.as_view()),
     url(r'^orders/$', customer_views.OrderList.as_view()),
 ]
 
