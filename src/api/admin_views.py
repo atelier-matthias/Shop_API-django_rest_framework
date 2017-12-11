@@ -11,6 +11,7 @@ from .pagination_controller import StandardPagination
 from django.db import transaction
 from datetime import datetime
 from django_filters import rest_framework as filters
+from .error_codes import HTTP409Response, ErrorCodes
 
 
 class AdminUserList(ListAPIView):
@@ -46,13 +47,21 @@ class AdminStockList(ListAPIView, CreateAPIView):
     serializer_class = AdminStockListSerializer
     permission_classes = [IsAdminUser, ]
 
-    # def get(self, request, *args, **kwargs):
-    #     stocks = set()
-    #     res = Stock.objects.all()
-    #
-    #     stocks.add(s for s in res)
-    #
-    #     return ""
+    #GET filters
+    def get_queryset(self):
+        filters = {}
+        if 'product_code' in self.request.GET:
+            filters['product_code__name__contains'] = self.request.GET['product_code']
+        if 'shop_num' in self.request.GET:
+            filters['shop_num__name__contains'] = self.request.GET['shop_num']
+
+        return Stock.objects.filter(**filters)
+
+    def post(self, request, *args, **kwargs):
+        if Stock.objects.filter(product_code=request.POST['product_code'], shop_num=request.POST['shop_num']):
+            return HTTP409Response(ErrorCodes.STOCK_ALREADY_CREATED)
+
+        return super(AdminStockList, self).post(request, *args, **kwargs)
 
 
 class AdminOrderList(ListAPIView, CreateAPIView):

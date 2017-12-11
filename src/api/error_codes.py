@@ -18,3 +18,5 @@ class ErrorCodes(dict):
     EMAIL_ALREADY_REGISTERED = ('email already used', 2001)
 
     USER_OR_PASSWORD_NOT_MATCH = ('user or password not match', 3001)
+
+    STOCK_ALREADY_CREATED = ('stocks with this product and shop already created', 4001)
