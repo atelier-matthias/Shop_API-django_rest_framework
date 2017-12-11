@@ -29,7 +29,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 class UserUpdatePasswordSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
-        fields = ('password',)
+        fields = ('password','username')
 
     def update(self, instance, validated_data):
         user = super(UserUpdatePasswordSerializer, self).update(instance, validated_data)

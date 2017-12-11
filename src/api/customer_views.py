@@ -82,11 +82,20 @@ class ProfileUpdatePassword(UpdateAPIView):
     queryset = CustomerProfile.objects.filter()
     serializer_class = UserUpdatePasswordSerializer
     permission_classes = [IsAuthenticated, ]
-    lookup_url_kwarg = 'pk'
+    lookup_url_kwarg = 'customer_uuid'
 
+    # PUT body fields ('username', 'old_password', 'password')
     def put(self, request, *args, **kwargs):
-        self.kwargs.update({'pk': self.request.user.uuid})
-        return self.update(request, *args, **kwargs)
+        data = request.data
+
+        username = data.get('username', None)
+        password = data.get('old_password', None)
+
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            return super(ProfileUpdatePassword, self).put(request, *args, **kwargs)
+
+        return HTTP404Response(ErrorCodes.USER_OR_PASSWORD_NOT_MATCH)
 
 
 class ProductList(ListAPIView):
