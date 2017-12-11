@@ -1,16 +1,14 @@
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView, \
-    RetrieveAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     StockListSerializer, ShopListSerializer, OrderListSerializer
 from .admin_serializers import AdminCustomerUpdateSerializer, AdminShopBucketSerializer, AdminOrdersSerializers, \
-    AdminShopSerializer, AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize
+    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize
 from .models import Product, Shop, Stock, Order, CustomerProfile, ShopBucket, OrderProducts
 from .pagination_controller import StandardPagination
 from django.db import transaction
-from .error_codes import ErrorCodes
 from datetime import datetime
 
 

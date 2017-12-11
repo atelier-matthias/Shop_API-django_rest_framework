@@ -23,7 +23,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
-        fields = '__all__'
+        fields = ('uuid', 'username', 'first_name', 'last_name', 'email', 'phone', 'city')
 
 
 class UserUpdatePasswordSerializer(serializers.ModelSerializer):
@@ -41,7 +41,7 @@ class UserUpdatePasswordSerializer(serializers.ModelSerializer):
 class UserUpdateDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerProfile
-        fields = ('email', 'first_name', 'last_name')
+        fields = ('first_name', 'last_name', 'email', 'phone', 'city')
 
 
 class ProductListSerializer(serializers.ModelSerializer):
