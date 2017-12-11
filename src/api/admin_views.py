@@ -5,7 +5,7 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDe
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer
 from .admin_serializers import AdminCustomerUpdateSerializer, AdminShopBucketSerializer, AdminOrdersSerializers, \
-    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize, AdminStockListSerializer
+    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize, AdminStockListSerializer, AdminStockUpdateSerializer
 from .models import Product, Shop, Stock, Order, CustomerProfile, ShopBucket, OrderProducts
 from .pagination_controller import StandardPagination
 from django.db import transaction
@@ -62,6 +62,17 @@ class AdminStockList(ListAPIView, CreateAPIView):
             return HTTP409Response(ErrorCodes.STOCK_ALREADY_CREATED)
 
         return super(AdminStockList, self).post(request, *args, **kwargs)
+
+
+class AdminStockDetails(RetrieveUpdateAPIView):
+    queryset = Stock.objects.all()
+    serializer_class = AdminStockListSerializer
+    permission_classes = [IsAdminUser, ]
+    lookup_url_kwarg = 'stock_uuid'
+
+    def put(self, request, *args, **kwargs):
+        self.serializer_class = AdminStockUpdateSerializer
+        return super(AdminStockDetails, self).put(request, *args, **kwargs)
 
 
 class AdminOrderList(ListAPIView, CreateAPIView):

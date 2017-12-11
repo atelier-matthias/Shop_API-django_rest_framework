@@ -46,6 +46,12 @@ class AdminStockListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class AdminStockUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = ('quantity', )
+
+
 class AdminOrderStatusSetPaidSerialize(serializers.ModelSerializer):
     class Meta:
         model = Order

@@ -12,6 +12,7 @@ admin_routes = [
     url(r'^admin/products/$', admin_views.AdminProductList.as_view()),
     url(r'^admin/shops/$', admin_views.AdminShopList.as_view()),
     url(r'^admin/stocks/$', admin_views.AdminStockList.as_view()),
+    url(r'^admin/stocks/(?P<stock_uuid>%s)/$' %UUID_RE, admin_views.AdminStockDetails.as_view()),
 
     url(r'^admin/orders/$', admin_views.AdminOrderList.as_view()),
     url(r'^admin/orders/(?P<order_uuid>%s)/$' % UUID_RE, admin_views.AdminOrderDetails.as_view()),
@@ -21,8 +22,6 @@ admin_routes = [
     url(r'^admin/buckets/(?P<bucket_uuid>%s)/$' % UUID_RE, admin_views.AdminShopBucketDetails.as_view()),
 
 ]
-
-
 
 customer_routes = [
     url(r'^login/$', customer_views.UserLogin.as_view()),
@@ -42,5 +41,4 @@ misc_routes = [
     url(r'^hello/$', customer_views.hello_world, name='hello_world'),
 ]
 
-
-urlpatterns = admin_routes + customer_routes
+urlpatterns = admin_routes + customer_routes + misc_routes
