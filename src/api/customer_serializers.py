@@ -56,12 +56,6 @@ class ShopListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class StockListSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Stock
-        fields = '__all__'
-
-
 class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order

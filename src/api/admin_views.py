@@ -3,20 +3,23 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer
+    ShopListSerializer, OrderListSerializer
 from .admin_serializers import AdminCustomerUpdateSerializer, AdminShopBucketSerializer, AdminOrdersSerializers, \
-    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize
+    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize, AdminStockListSerializer
 from .models import Product, Shop, Stock, Order, CustomerProfile, ShopBucket, OrderProducts
 from .pagination_controller import StandardPagination
 from django.db import transaction
 from datetime import datetime
+from django_filters import rest_framework as filters
 
 
 class AdminUserList(ListAPIView):
-    queryset = CustomerProfile.objects.all()
+    queryset = CustomerProfile.objects.filter()
     serializer_class = UserDetailsSerializer
     permission_classes = [IsAdminUser,]
     pagination_class = StandardPagination
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_fields = ('username', 'email')
 
 
 class AdminUserDetails(RetrieveUpdateAPIView):
@@ -40,8 +43,16 @@ class AdminShopList(ListAPIView, CreateAPIView):
 
 class AdminStockList(ListAPIView, CreateAPIView):
     queryset = Stock.objects.all()
-    serializer_class = StockListSerializer
+    serializer_class = AdminStockListSerializer
     permission_classes = [IsAdminUser, ]
+
+    # def get(self, request, *args, **kwargs):
+    #     stocks = set()
+    #     res = Stock.objects.all()
+    #
+    #     stocks.add(s for s in res)
+    #
+    #     return ""
 
 
 class AdminOrderList(ListAPIView, CreateAPIView):

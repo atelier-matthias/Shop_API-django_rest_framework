@@ -36,15 +36,15 @@ class Shop(StatusModel, SoftDeletableModel):
     shop_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, default=None)
 
-    # def __str__(self):
-    #     return self.name
+    def __str__(self):
+        return self.name
 
 
 class Stock(models.Model):
     stock_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_code = models.ForeignKey(Product, on_delete=models.CASCADE, default=None)
     shop_num = models.ForeignKey(Shop, on_delete=models.CASCADE, default=None)
-    quantity = models.SmallIntegerField
+    quantity = models.SmallIntegerField(default=0)
 
 
 class Order(models.Model):

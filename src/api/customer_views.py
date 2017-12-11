@@ -11,7 +11,7 @@ from django.contrib.auth import login, logout
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
+    ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
     UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, UserBucketAddProductSerializer
 from django.contrib.auth.models import User
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket
@@ -99,7 +99,7 @@ class ProfileUpdatePassword(UpdateAPIView):
 
 
 class ProductList(ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.select_related()
     serializer_class = ProductListSerializer
 
 
