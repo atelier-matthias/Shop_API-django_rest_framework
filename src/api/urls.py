@@ -31,6 +31,9 @@ customer_routes = [
     url(r'^profile/(?P<customer_uuid>%s)/$' % UUID_RE, customer_views.ProfileUpdate.as_view()),
     url(r'^profile/(?P<customer_uuid>%s)/setpassword$' % UUID_RE, customer_views.ProfileUpdatePassword.as_view()),
 
+    url(r'bucket/$', customer_views.BucketsProductsList.as_view()),
+    url(r'bucket/(?P<bucket_uuid>%s)/$' % UUID_RE, customer_views.BucketProductUpdate.as_view()),
+
     url(r'^products/$', customer_views.ProductList.as_view()),
     url(r'^shops/$', customer_views.ShopList.as_view()),
     # url(r'^stocks/$', customer_views.StockList.as_view()),

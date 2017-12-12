@@ -13,7 +13,10 @@ class ErrorCodes(dict):
 
     RESULT_OK = ('success', 200)
 
-    ORDER_NOT_FOUND = (1001, "order not found")
+    ORDER_NOT_FOUND = ("order not found", 1001)
+
+    PRODUCT_ALREADY_IN_BUCKET = ("Product already in bucket", 1041)
+
 
     EMAIL_ALREADY_REGISTERED = ('email already used', 2001)
 

@@ -65,10 +65,16 @@ class OrderListSerializer(serializers.ModelSerializer):
 class UserBucketDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopBucket
-        fields = ('quantity', 'product', 'value')
+        fields = ('quantity', 'product', 'value', 'bucket_uuid')
 
 
 class UserBucketAddProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShopBucket
-        fields = ('quantity', 'product')
+        fields = ('quantity', 'product', 'value', 'customer')
+
+
+class UserBucketProductQuantityUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShopBucket
+        fields = ('quantity', )

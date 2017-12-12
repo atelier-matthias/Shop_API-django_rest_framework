@@ -12,7 +12,8 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
-    UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, UserBucketAddProductSerializer
+    UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, \
+    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer
 from django.contrib.auth.models import User
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket
 from .error_codes import HTTP404Response, HTTP409Response, ErrorCodes
@@ -52,17 +53,20 @@ class RegisterUser(CreateAPIView):
         return super(RegisterUser, self).post(request, *args, **kwargs)
 
 
-class ProfileDetails(RetrieveAPIView):
-    queryset = CustomerProfile.objects.filter()
+class ProfileDetails(ListAPIView):
+    # queryset = CustomerProfile.objects.filter()
     serializer_class = UserDetailsSerializer
     permission_classes = [IsAuthenticated, ]
-    lookup_url_kwarg = 'pk'
+    # lookup_url_kwarg = 'pk'
 
-    def get(self, request, *args, **kwargs):
-        self.kwargs.update({'pk': self.request.user.uuid})
-        user = self.get_object()
-        serializer = self.get_serializer(user).data
-        return Response(serializer)
+    def get_queryset(self):
+        return CustomerProfile.objects.filter(uuid=self.request.user.uuid)
+
+    # def get(self, request, *args, **kwargs):
+    #     self.kwargs.update({'pk': self.request.user.uuid})
+    #     user = self.get_object()
+    #     serializer = self.get_serializer(user).data
+    #     return Response(serializer)
 
 
 class ProfileUpdate(UpdateAPIView):
@@ -108,45 +112,48 @@ class ShopList(ListAPIView, CreateAPIView):
     serializer_class = ShopListSerializer
 
 
-class BucketDetails(RetrieveAPIView):
-    queryset = ShopBucket.objects.all()
+class BucketsProductsList(ListAPIView, CreateAPIView):
     serializer_class = UserBucketDetailsSerializer
     permission_classes = [IsAuthenticated, ]
-    lookup_url_kwarg = 'pk'
 
-    def get(self, request, *args, **kwargs):
-        self.kwargs.update({'pk': self.request.user.uuid})
-        user = self.get_object()
-        serializer = self.get_serializer(user).data
-        return Response(serializer)
-
-
-class BucketAddProduct(CreateAPIView):
-    queryset = ShopBucket.objects.all()
-    serializer_class = UserBucketAddProductSerializer
-    permission_classes = [IsAuthenticated, ]
-    lookup_url_kwarg = 'pk'
+    def get_queryset(self):
+        return ShopBucket.objects.filter(customer=self.request.user)
 
     def post(self, request, *args, **kwargs):
-        prod = dict()
+        if ShopBucket.objects.filter(customer=self.request.user, product=self.request.data['product']):
+            return HTTP409Response(ErrorCodes.PRODUCT_ALREADY_IN_BUCKET)
+        else:
+            req = {}
 
-        product = Product.objects.get(product_uuid=request.POST['product'])
-        prod = request.data
-        prod['customer'] = self.request.user
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            product = Product.objects.get(product_uuid=self.request.data['product'])
+
+            req['customer'] = self.request.user.uuid
+            req['quantity'] = self.request.data['quantity']
+            req['product'] = product.product_uuid
+            req['value'] = product.price
+
+            self.serializer_class = UserBucketAddProductSerializer
+            serializer = self.get_serializer(data=req)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(req)
+
+            return Response(req, status=status.HTTP_201_CREATED, headers=headers)
+
+
+class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
+    queryset = ShopBucket.objects.filter()
+    serializer_class = UserBucketProductQuantityUpdateSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'bucket_uuid'
 
 
 class OrderList(ListAPIView, CreateAPIView):
-    queryset = Order.objects.all()
     serializer_class = OrderListSerializer
     permission_classes = [IsAuthenticated, ]
 
-
-
+    def get_queryset(self):
+        return Order.objects.filter(customer=self.request.user)
 
 
 
