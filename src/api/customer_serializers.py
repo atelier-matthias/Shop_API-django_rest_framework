@@ -62,18 +62,16 @@ class OrderListSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class OrderProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderProducts
-        fields = ('quantity', )
-
-
 class OrderDetailsSerializer(serializers.ModelSerializer):
-    # order = OrderProductSerializer(read_only=True, source='order_set')
-
     class Meta:
         model = Order
         fields = ('order_uuid', 'status', 'date_created', 'date_paid', 'sum', 'payment')
+
+
+class OrderProductsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderProducts
+        fields = '__all__'
 
 
 class UserBucketDetailsSerializer(serializers.ModelSerializer):

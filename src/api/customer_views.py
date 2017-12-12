@@ -14,7 +14,8 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
     UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, \
-    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer, OrderDetailsSerializer
+    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer ,OrderDetailsSerializer, \
+    OrderProductsSerializer
 from .pagination_controller import StandardPagination
 
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProducts
@@ -193,12 +194,22 @@ class OrderList(ListAPIView, CreateAPIView):
 
 
 class OrderDetails(RetrieveAPIView):
-    queryset = Order.objects.prefetch_related('orderproducts_set').all()
+    queryset = Order.objects.all()
     serializer_class = OrderDetailsSerializer
     permission_classes = [IsAuthenticated, ]
     lookup_url_kwarg = 'order_uuid'
 
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        res = OrderProducts.objects.filter(order=instance)
 
+        self.serializer_class = OrderProductsSerializer
+        products = []
+        for item in res:
+            products.append(self.get_serializer(item).data)
+
+        return Response([serializer.data, products])
 
 
 @api_view(['GET'])
