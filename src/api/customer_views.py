@@ -14,7 +14,7 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
     UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, \
-    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer
+    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer, OrderDetailsSerializer
 from .pagination_controller import StandardPagination
 
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProducts
@@ -190,6 +190,13 @@ class OrderList(ListAPIView, CreateAPIView):
                     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
                 except:
                     return HTTP500Response(ErrorCodes.ORDER_NOT_CREATED)
+
+
+class OrderDetails(RetrieveAPIView):
+    queryset = Order.objects.prefetch_related('orderproducts_set').all()
+    serializer_class = OrderDetailsSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'order_uuid'
 
 
 

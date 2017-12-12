@@ -90,7 +90,7 @@ class ShopBucket(models.Model):
 
 class OrderProducts(models.Model):
     order_product_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    order = models.ForeignKey(Order, related_name='ordered_products', on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
     quantity = models.SmallIntegerField(default=0)
     product = models.ForeignKey(Product, blank=False, null=False, default=None)
     value = models.DecimalField(max_digits=8, decimal_places=2)
