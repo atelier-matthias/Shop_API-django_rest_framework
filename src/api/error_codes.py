@@ -21,7 +21,8 @@ class ErrorCodes(dict):
     ORDER_NOT_CREATED = ("order not created", 1002)
 
     PRODUCT_ALREADY_IN_BUCKET = ("Product already in bucket", 1041)
-    BUCKET_IS_EMPTY = ("bucket is empty", 1042)
+    PRODUCT_NOT_AVALIABLE = ('Product not avaliable', 1042)
+    BUCKET_IS_EMPTY = ("bucket is empty", 1043)
 
     EMAIL_ALREADY_REGISTERED = ('email already used', 2001)
 

@@ -47,7 +47,7 @@ class UserUpdateDetailsSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = '__all__'
+        fields = ('product_uuid', 'status', 'name', 'description', 'price', 'product_type')
 
 
 class ShopListSerializer(serializers.ModelSerializer):
