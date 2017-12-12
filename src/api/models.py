@@ -43,8 +43,9 @@ class Shop(StatusModel, SoftDeletableModel):
 class Stock(models.Model):
     stock_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     product_code = models.ForeignKey(Product, on_delete=models.CASCADE, default=None)
-    shop_num = models.ForeignKey(Shop, on_delete=models.CASCADE, default=None)
+    # shop_num = models.ForeignKey(Shop, on_delete=models.CASCADE, default=None)
     quantity = models.SmallIntegerField(default=0)
+    in_reservation = models.SmallIntegerField(default=0)
 
 
 class Order(models.Model):
@@ -72,7 +73,7 @@ class Order(models.Model):
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default=NEW)
     order_uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     customer = models.ForeignKey(CustomerProfile)
-    shop = models.ForeignKey(Shop, related_name='shop_order')
+    # shop = models.ForeignKey(Shop, related_name='shop_order')
     date_created = models.DateTimeField(default=now)
     date_paid = models.DateTimeField(blank=True, null=True)
     sum = models.DecimalField(max_digits=8, decimal_places=2)

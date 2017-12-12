@@ -1,22 +1,24 @@
-from django.shortcuts import redirect
-from rest_framework.reverse import reverse
+from datetime import datetime
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import mixins
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view
 from rest_framework.authentication import authenticate
 from django.contrib.auth import login, logout
+from django_filters import rest_framework as filters
+from django.contrib.auth.models import User
+from django.db import transaction
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
     UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, \
     UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer
-from django.contrib.auth.models import User
-from .models import Product, Shop, Order, CustomerProfile, ShopBucket
-from .error_codes import HTTP404Response, HTTP409Response, ErrorCodes
+from .pagination_controller import StandardPagination
+
+from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProducts
+from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes
 
 
 class UserLogin(GenericAPIView):
@@ -115,6 +117,7 @@ class ShopList(ListAPIView, CreateAPIView):
 class BucketsProductsList(ListAPIView, CreateAPIView):
     serializer_class = UserBucketDetailsSerializer
     permission_classes = [IsAuthenticated, ]
+    pagination_class = StandardPagination
 
     def get_queryset(self):
         return ShopBucket.objects.filter(customer=self.request.user)
@@ -154,6 +157,40 @@ class OrderList(ListAPIView, CreateAPIView):
 
     def get_queryset(self):
         return Order.objects.filter(customer=self.request.user)
+
+    def post(self, request, *args, **kwargs):
+        bucket = ShopBucket.objects.filter(customer=self.request.user.uuid)
+        if not bucket:
+            return HTTP409Response(ErrorCodes.BUCKET_IS_EMPTY)
+        else:
+            total_value = 0
+            for item in bucket:
+                total_value += item.value * item.quantity
+
+            order = {
+                'status': Order.NEW,
+                'customer': self.request.user.uuid,
+                'data_created': datetime.now(),
+                'payment': self.request.POST['payment'],
+                'sum': total_value
+            }
+            serializer = self.get_serializer(data=order)
+            serializer.is_valid(raise_exception=True)
+            headers = self.get_success_headers(serializer.data)
+            with transaction.atomic():
+                try:
+                    self.perform_create(serializer)
+                    for item in bucket:
+                        o = OrderProducts(order=serializer.instance,
+                                          quantity=item.quantity,
+                                          product=item.product,
+                                          value=item.value)
+                        o.save()
+                    ShopBucket.objects.filter(customer=self.request.user.uuid).delete()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+                except:
+                    return HTTP500Response(ErrorCodes.ORDER_NOT_CREATED)
+
 
 
 

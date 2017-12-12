@@ -34,6 +34,9 @@ class AdminProductList(ListAPIView, CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
     permission_classes = [IsAdminUser,]
+    pagination_class = StandardPagination
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_fields = ('name', 'product_type')
 
 
 class AdminShopList(ListAPIView, CreateAPIView):
@@ -77,13 +80,13 @@ class AdminStockDetails(RetrieveUpdateAPIView):
 
 class AdminOrderList(ListAPIView, CreateAPIView):
     queryset = Order.objects.all()
-    serializer_class = OrderListSerializer
+    serializer_class = AdminOrdersSerializers
     permission_classes = [IsAdminUser, ]
 
     def create(self, request, *args, **kwargs):
         bucket = ShopBucket.objects.filter(customer=request.user.uuid)
         if not bucket:
-            return Response("bucket is empty", status=status.HTTP_404_NOT_FOUND)
+            return HTTP409Response(ErrorCodes.BUCKET_IS_EMPTY)
         else:
             with transaction.atomic():
                 serializer = self.get_serializer(data=request.data)

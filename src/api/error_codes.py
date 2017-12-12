@@ -4,9 +4,13 @@ from rest_framework.response import Response
 def HTTP409Response(message):
     return Response({'message': message[0], 'code': message[1]}, status=409)
 
+
 def HTTP404Response(message):
     return Response({'message': message[0], 'code': message[1]}, status=404)
 
+
+def HTTP500Response(message):
+    return Response({'message': message[0], 'code': message[1]}, status=500)
 
 
 class ErrorCodes(dict):
@@ -14,9 +18,10 @@ class ErrorCodes(dict):
     RESULT_OK = ('success', 200)
 
     ORDER_NOT_FOUND = ("order not found", 1001)
+    ORDER_NOT_CREATED = ("order not created", 1002)
 
     PRODUCT_ALREADY_IN_BUCKET = ("Product already in bucket", 1041)
-
+    BUCKET_IS_EMPTY = ("bucket is empty", 1042)
 
     EMAIL_ALREADY_REGISTERED = ('email already used', 2001)
 
