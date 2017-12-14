@@ -60,7 +60,7 @@ class AdminStockList(ListAPIView, CreateAPIView):
         return Stock.objects.filter(**filters)
 
     def post(self, request, *args, **kwargs):
-        if Stock.objects.filter(product_code=request.POST['product_code']):
+        if Stock.objects.filter(product_code=request.data['product_code']):
             return HTTP409Response(ErrorCodes.STOCK_ALREADY_CREATED)
 
         return super(AdminStockList, self).post(request, *args, **kwargs)

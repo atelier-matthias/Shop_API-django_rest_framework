@@ -8,6 +8,7 @@ from rest_framework.authentication import authenticate
 from django.contrib.auth import login, logout
 from django_filters import rest_framework as filters
 from django.contrib.auth.models import User
+from django.middleware.csrf import get_token
 from django.db import transaction
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
     GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
@@ -19,7 +20,7 @@ from .customer_serializers import UserDetailsSerializer, ProductListSerializer, 
 from .controller_pagination import StandardPagination
 
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProducts, Stock
-from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes
+from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes, RETURN_OK
 
 
 class UserLogin(GenericAPIView):
@@ -33,8 +34,9 @@ class UserLogin(GenericAPIView):
 
         user = authenticate(username=username, password=password)
         if user is not None:
-            login(request, user)
-            return Response("success", status=200)
+            res = login(request, user)
+
+            return Response({'status': 'OK', 'user': user.pk, 'CSRF_token': get_token(request)}, status=200)
         else:
             return HTTP404Response(ErrorCodes.USER_OR_PASSWORD_NOT_MATCH)
 
@@ -42,7 +44,7 @@ class UserLogin(GenericAPIView):
 class UserLogout(APIView):
     def get(self, request):
         logout(request)
-        return Response("user Logout", status=200)
+        return RETURN_OK('user logout')
 
 
 class RegisterUser(CreateAPIView):
@@ -50,26 +52,18 @@ class RegisterUser(CreateAPIView):
     serializer_class = UserRegisterSerializer
 
     def post(self, request, *args, **kwargs):
-        if CustomerProfile.objects.filter(email=request.POST['email']):
+        if CustomerProfile.objects.filter(email=request.data['email']):
             return HTTP409Response(ErrorCodes.EMAIL_ALREADY_REGISTERED)
 
         return super(RegisterUser, self).post(request, *args, **kwargs)
 
 
 class ProfileDetails(ListAPIView):
-    # queryset = CustomerProfile.objects.filter()
     serializer_class = UserDetailsSerializer
     permission_classes = [IsAuthenticated, ]
-    # lookup_url_kwarg = 'pk'
 
     def get_queryset(self):
         return CustomerProfile.objects.filter(uuid=self.request.user.uuid)
-
-    # def get(self, request, *args, **kwargs):
-    #     self.kwargs.update({'pk': self.request.user.uuid})
-    #     user = self.get_object()
-    #     serializer = self.get_serializer(user).data
-    #     return Response(serializer)
 
 
 class ProfileUpdate(UpdateAPIView):
@@ -79,7 +73,7 @@ class ProfileUpdate(UpdateAPIView):
     lookup_url_kwarg = 'customer_uuid'
 
     def put(self, request, *args, **kwargs):
-        if CustomerProfile.objects.filter(email=request.POST['email']):
+        if CustomerProfile.objects.filter(email=request.data['email']):
             return HTTP409Response(ErrorCodes.EMAIL_ALREADY_REGISTERED)
 
         return super(ProfileUpdate, self).put(request, *args, **kwargs)
@@ -159,11 +153,11 @@ class BucketsProductsList(ListAPIView, CreateAPIView):
         if ShopBucket.objects.filter(customer=self.request.user, product=self.request.data['product']):
             return HTTP409Response(ErrorCodes.PRODUCT_ALREADY_IN_BUCKET)
 
-        stock = Stock.objects.filter(product_code=request.POST['product']).first()
+        stock = Stock.objects.filter(product_code=request.data['product']).first()
         if stock is None or stock.quantity is 0:
             return HTTP409Response(ErrorCodes.PRODUCT_NOT_AVALIABLE)
 
-        if stock.quantity < int(request.POST['quantity']):
+        if stock.quantity < int(request.data['quantity']):
             return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
 
         else:
@@ -181,8 +175,8 @@ class BucketsProductsList(ListAPIView, CreateAPIView):
 
             try:
                 with transaction.atomic():
-                    Stock.objects.filter(stock_uuid=stock.pk).update(quantity=stock.quantity-int(request.POST['quantity']),
-                                                                       in_reservation=stock.in_reservation+int(request.POST['quantity']))
+                    Stock.objects.filter(stock_uuid=stock.pk).update(quantity=stock.quantity-int(request.data['quantity']),
+                                                                       in_reservation=stock.in_reservation+int(request.data['quantity']))
                     self.perform_create(serializer)
 
                 headers = self.get_success_headers(res)
@@ -218,7 +212,7 @@ class OrderList(ListAPIView, CreateAPIView):
                 'status': Order.NEW,
                 'customer': self.request.user.uuid,
                 'data_created': datetime.now(),
-                'payment': self.request.POST['payment'],
+                'payment': self.request.data['payment'],
                 'sum': total_value
             }
             serializer = self.get_serializer(data=order)
