@@ -22,7 +22,10 @@ class ErrorCodes(dict):
 
     PRODUCT_ALREADY_IN_BUCKET = ("Product already in bucket", 1041)
     PRODUCT_NOT_AVALIABLE = ('Product not avaliable', 1042)
-    BUCKET_IS_EMPTY = ("bucket is empty", 1043)
+    NOT_ENOUGH_PRODUCTS_IN_MAGAZINES = ('not enough products in magazines', 1043)
+
+    BUCKET_IS_EMPTY = ("bucket is empty", 1083)
+    ADD_PRODUCT_TO_BUCKET_ERROR = ('product not added to bucker', 1084)
 
     EMAIL_ALREADY_REGISTERED = ('email already used', 2001)
 

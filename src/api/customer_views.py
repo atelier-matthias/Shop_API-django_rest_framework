@@ -163,28 +163,32 @@ class BucketsProductsList(ListAPIView, CreateAPIView):
         if stock is None or stock.quantity is 0:
             return HTTP409Response(ErrorCodes.PRODUCT_NOT_AVALIABLE)
 
+        if stock.quantity < int(request.POST['quantity']):
+            return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
+
         else:
-            req = {}
+            res = {}
 
             product = Product.objects.get(product_uuid=self.request.data['product'])
 
-
-            req['customer'] = self.request.user.uuid
-            req['quantity'] = self.request.data['quantity']
-            req['product'] = product.product_uuid
-            req['value'] = product.price
+            res['customer'] = self.request.user.uuid
+            res['quantity'] = self.request.data['quantity']
+            res['product'] = product.product_uuid
+            res['value'] = product.price
             self.serializer_class = UserBucketAddProductSerializer
-            serializer = self.get_serializer(data=req)
+            serializer = self.get_serializer(data=res)
             serializer.is_valid(raise_exception=True)
 
-            with transaction.atomic():
-                Stock.objects.filter(stock_uuid=stock.pk).update(quantity=stock.quantity-1,
-                                                                   in_reservation=stock.in_reservation+1)
-                self.perform_create(serializer)
+            try:
+                with transaction.atomic():
+                    Stock.objects.filter(stock_uuid=stock.pk).update(quantity=stock.quantity-int(request.POST['quantity']),
+                                                                       in_reservation=stock.in_reservation+int(request.POST['quantity']))
+                    self.perform_create(serializer)
 
-            headers = self.get_success_headers(req)
-
-            return Response(req, status=status.HTTP_201_CREATED, headers=headers)
+                headers = self.get_success_headers(res)
+                return Response(res, status=status.HTTP_201_CREATED, headers=headers)
+            except:
+                return HTTP500Response(ErrorCodes.ADD_PRODUCT_TO_BUCKET_ERROR)
 
 
 class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
