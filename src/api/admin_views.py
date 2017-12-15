@@ -3,20 +3,24 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveUpdateDestroyAPIView, RetrieveUpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
-    StockListSerializer, ShopListSerializer, OrderListSerializer
+    ShopListSerializer, OrderListSerializer
 from .admin_serializers import AdminCustomerUpdateSerializer, AdminShopBucketSerializer, AdminOrdersSerializers, \
-    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize
+    AdminOrderProductSerializer, AdminOrderStatusSetPaidSerialize, AdminStockListSerializer, AdminStockUpdateSerializer
 from .models import Product, Shop, Stock, Order, CustomerProfile, ShopBucket, OrderProducts
-from .pagination_controller import StandardPagination
+from .controller_pagination import StandardPagination
 from django.db import transaction
 from datetime import datetime
+from django_filters import rest_framework as filters
+from .error_codes import HTTP409Response, ErrorCodes
 
 
 class AdminUserList(ListAPIView):
-    queryset = CustomerProfile.objects.all()
+    queryset = CustomerProfile.objects.filter()
     serializer_class = UserDetailsSerializer
     permission_classes = [IsAdminUser,]
     pagination_class = StandardPagination
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_fields = ('username', 'email')
 
 
 class AdminUserDetails(RetrieveUpdateAPIView):
@@ -30,6 +34,9 @@ class AdminProductList(ListAPIView, CreateAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductListSerializer
     permission_classes = [IsAdminUser,]
+    pagination_class = StandardPagination
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_fields = ('name', 'product_type')
 
 
 class AdminShopList(ListAPIView, CreateAPIView):
@@ -39,20 +46,46 @@ class AdminShopList(ListAPIView, CreateAPIView):
 
 
 class AdminStockList(ListAPIView, CreateAPIView):
-    queryset = Stock.objects.all()
-    serializer_class = StockListSerializer
+    serializer_class = AdminStockListSerializer
     permission_classes = [IsAdminUser, ]
+
+    #GET filters
+    def get_queryset(self):
+        filters = {}
+        if 'product_code' in self.request.GET:
+            filters['product_code__name__contains'] = self.request.GET['product_code']
+        # if 'shop_num' in self.request.GET:
+        #     filters['shop_num__name__contains'] = self.request.GET['shop_num']
+
+        return Stock.objects.filter(**filters)
+
+    def post(self, request, *args, **kwargs):
+        if Stock.objects.filter(product_code=request.POST['product_code']):
+            return HTTP409Response(ErrorCodes.STOCK_ALREADY_CREATED)
+
+        return super(AdminStockList, self).post(request, *args, **kwargs)
+
+
+class AdminStockDetails(RetrieveUpdateDestroyAPIView):
+    queryset = Stock.objects.all()
+    serializer_class = AdminStockListSerializer
+    permission_classes = [IsAdminUser, ]
+    lookup_url_kwarg = 'stock_uuid'
+
+    def put(self, request, *args, **kwargs):
+        self.serializer_class = AdminStockUpdateSerializer
+        return super(AdminStockDetails, self).put(request, *args, **kwargs)
 
 
 class AdminOrderList(ListAPIView, CreateAPIView):
     queryset = Order.objects.all()
-    serializer_class = OrderListSerializer
+    serializer_class = AdminOrdersSerializers
     permission_classes = [IsAdminUser, ]
 
     def create(self, request, *args, **kwargs):
         bucket = ShopBucket.objects.filter(customer=request.user.uuid)
         if not bucket:
-            return Response("bucket is empty", status=status.HTTP_404_NOT_FOUND)
+            return HTTP409Response(ErrorCodes.BUCKET_IS_EMPTY)
         else:
             with transaction.atomic():
                 serializer = self.get_serializer(data=request.data)

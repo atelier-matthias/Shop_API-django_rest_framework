@@ -40,6 +40,18 @@ class AdminOrdersSerializers(serializers.ModelSerializer):
         fields = ('status', 'order_uuid', 'customer', 'shop', 'sum', 'date_paid')
 
 
+class AdminStockListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = '__all__'
+
+
+class AdminStockUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = ('quantity', )
+
+
 class AdminOrderStatusSetPaidSerialize(serializers.ModelSerializer):
     class Meta:
         model = Order
