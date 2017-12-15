@@ -10,6 +10,7 @@ class CustomerProfile(AbstractUser):
     uuid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     phone = models.CharField(max_length=20, blank=True, default='')
     city = models.CharField(max_length=100, blank=True, default='')
+    email = models.EmailField(blank=False)
 
 
 class Product(StatusModel, SoftDeletableModel):
