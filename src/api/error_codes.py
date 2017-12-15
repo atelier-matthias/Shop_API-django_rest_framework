@@ -12,10 +12,11 @@ def HTTP404Response(message):
 def HTTP500Response(message):
     return Response({'message': message[0], 'code': message[1]}, status=500)
 
+def RETURN_OK(message):
+    return Response({'status': 'OK', 'message': message}, status=200)
+
 
 class ErrorCodes(dict):
-
-    RESULT_OK = ('success', 200)
 
     ORDER_NOT_FOUND = ("order not found", 1001)
     ORDER_NOT_CREATED = ("order not created", 1002)
