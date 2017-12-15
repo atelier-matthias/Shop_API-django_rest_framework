@@ -251,16 +251,20 @@ class OrderList(ListAPIView, CreateAPIView):
             }
             serializer = self.get_serializer(data=order)
             serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             with transaction.atomic():
                 try:
-                    self.perform_create(serializer)
                     for item in bucket:
+                        s = Stock.objects.get(product_code=item.product_id)
+                        s.in_reservation = s.in_reservation - item.quantity
                         o = OrderProducts(order=serializer.instance,
                                           quantity=item.quantity,
                                           product=item.product,
                                           value=item.value)
+                        s.save()
                         o.save()
+
                     ShopBucket.objects.filter(customer=self.request.user.uuid).delete()
                     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
                 except:
