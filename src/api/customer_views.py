@@ -191,6 +191,40 @@ class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, ]
     lookup_url_kwarg = 'bucket_uuid'
 
+    def put(self, request, *args, **kwargs):
+        res = self.get_object()
+        new_quantity = int(request.data['quantity'])
+
+        if new_quantity == 0:
+            return self.destroy(request, *args, **kwargs)
+
+        if res.quantity == new_quantity:
+            return super(BucketProductUpdate, self).put(request, *args, **kwargs)
+
+        stock = Stock.objects.get(product_code=res.product_id)
+        if res.quantity < new_quantity and stock.quantity < new_quantity - res.quantity:
+            return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
+
+        else:
+            with transaction.atomic():
+                stock = Stock.objects.get(product_code=res.product_id)
+                stock.quantity = stock.quantity + res.quantity - new_quantity
+                stock.in_reservation = stock.in_reservation - res.quantity + new_quantity
+                stock.save()
+
+            return super(BucketProductUpdate, self).put(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        res = self.get_object()
+
+        with transaction.atomic():
+            stock = Stock.objects.get(product_code=res.product_id)
+            stock.in_reservation = stock.in_reservation - res.quantity
+            stock.quantity = stock.quantity + res.quantity
+            stock.save()
+
+        return super(BucketProductUpdate, self).destroy(request, *args, **kwargs)
+
 
 class OrderList(ListAPIView, CreateAPIView):
     serializer_class = OrderListSerializer

@@ -49,7 +49,7 @@ class AdminStockListSerializer(serializers.ModelSerializer):
 class AdminStockUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Stock
-        fields = ('quantity', )
+        fields = ('quantity', 'in_reservation')
 
 
 class AdminOrderStatusSetPaidSerialize(serializers.ModelSerializer):
