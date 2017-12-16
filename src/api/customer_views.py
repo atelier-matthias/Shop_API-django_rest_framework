@@ -1,3 +1,4 @@
+import ast
 from datetime import datetime
 from rest_framework import status
 from rest_framework.response import Response
@@ -6,12 +7,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view
 from rest_framework.authentication import authenticate
 from django.contrib.auth import login, logout
+from django.conf import settings
 from django_filters import rest_framework as filters
 from django.contrib.auth.models import User
 from django.middleware.csrf import get_token
 from django.db import transaction
-from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveDestroyAPIView, RetrieveUpdateDestroyAPIView, \
-    GenericAPIView, UpdateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, \
+    GenericAPIView, UpdateAPIView
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
     UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, \
@@ -21,6 +23,7 @@ from .controller_pagination import StandardPagination
 
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProducts, Stock
 from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes, RETURN_OK
+from .controller_payu import PayUGatewayCommands
 
 
 class UserLogin(GenericAPIView):
@@ -319,6 +322,40 @@ class OrderSetCanceled(UpdateAPIView):
                 return HTTP500Response(ErrorCodes.ORDER_STATUS_UPDATE_ERROR)
 
 
+class OrderPayUPayment(UpdateAPIView):
+    queryset = Order.objects.filter()
+    serializer_class = OrderDetailsSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'order_uuid'
+
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        products = []
+        orderProducts = OrderProducts.objects.filter(order=instance)
+
+        for item in orderProducts:
+            s = {
+                'name': str(item.product.name),
+                'unitPrice': int(item.value * 100),
+                'quantity': item.quantity
+            }
+            products.append(s)
+
+        order = {
+                "notifyUrl": "https://your.eshop.com/notify",
+                "customerIp": str(get_client_ip(request)),
+                "merchantPosId": str(settings.PAYU_MERCHANT_KEY),
+                "description": "TEST_SHOP",
+                "currencyCode": "PLN",
+                "totalAmount": int(instance.sum * 100),
+                "products": products
+            }
+
+        res = PayUGatewayCommands.create_order(orderBody=order)
+
+        return Response(ast.literal_eval(res.history[0].text))
+
+
 @api_view(['GET'])
 def hello_world(request):
     res = User.objects.all()
@@ -333,3 +370,11 @@ def hello_world(request):
         data.append(a)
 
     return Response(data, status=201)
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
