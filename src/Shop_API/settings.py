@@ -106,6 +106,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+#PayU conf
+PAYU_MERCHANT_KEY = 307891
+
+PAYU_MERCHANT_SALT = "a9eb1974354c89620fcdef3467e7b635"
+
+PAYU_MODE = "TEST"
+
+PAY_OAUTH_SECRET = 'e74130ea092273f028be4dee842c9271'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
