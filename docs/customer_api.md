@@ -128,6 +128,49 @@ Where:
 | 404 | NOT FOUND | 3001 | user or password not match. |  |
 
 
+**Product list**
+
+*   **URL**
+    **GET** <_/api/products?name=`:product_name`&type=`:product_type`_>
+    
+Where:
+
+| Field  | Type | Required | Description  |
+|---|---|---|---|
+| `product_name`  | STRING | TRUE | product name  |
+| `product_type`  | STRING | TRUE | product type  |
+    
+   
+* **Success response**
+    * **CODE** 200
+    
+```json
+{
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": {
+        "561f3505-018f-4352-bcda-c6d00092eea1": {
+            "status": "new",
+            "name": "telewizor",
+            "description": "LED TV",
+            "price": "3000.00",
+            "product_type": "rtv",
+            "quantity": 9
+        },
+        "c7c6705d-9d18-4a70-a070-004fc5cfbc8e": {
+            "status": "new",
+            "name": "telefon",
+            "description": "telefon komórkowy",
+            "price": "1000.00",
+            "product_type": "rtv",
+            "quantity": 7
+        }
+    }
+}
+```
+
+
 **Customer products in bucket**
 
 *   **URL**
@@ -211,7 +254,7 @@ Where:
 
 ```json
 {
-    "quantity": null
+    "quantity": 2
 }
 ```   
 
@@ -263,8 +306,89 @@ Where:
 
 **Create Order**
 
-TODO
+**Update quantity products to bucket**
+
+*   **URL**
+    **POST** <_/api/orders_>
+    
+*   **BODY**
+
+```json
+{
+  "payment": "cash",
+}
+```   
+
+Where:
+
+| Field  | Type | Required | Description  |
+|---|---|---|---|
+| `payment`  | STRING | TRUE | payment method. Avaliable values - `CASH`, `CARD`, `PAYU`  | 
+
+
+* **Success response**
+    * **CODE** 200
+    
+```json
+{
+    "order_uuid": "df583417-eab9-4839-9569-001b17e4c785",
+    "status": "new",
+    "date_created": "2017-12-16T11:04:56.293906Z",
+    "date_paid": null,
+    "sum": "6000.00",
+    "payment": "cash",
+    "customer": "8b2de2bf-b04a-4674-bf92-f0e4c727720b"
+}
+```
+* **Error Response**
+
+| HTTP CODE | HTTP RESPONSE | CODE | MESSAGE | DETAILS | DESCRIPTION
+|---|---|---|---|---|---|
+| 403 | FORBIDDEN | | Authentication credentials were not provided. |  |
+| 400 | BAD REQUEST |  | invalid payment choice |  |
+| 409 | CONFLICT | 1083 | bucket is empty |  |
+
 
 **Order Details**
 
-TODO
+*   **URL**
+    **GET** <_/api/orders/`:orders_uuid`_>
+    
+
+* **Success response**
+    * **CODE** 200
+    
+```json
+[
+    {
+        "order_uuid": "80ad25ca-048c-4a01-9ff7-ed690b9cc00f",
+        "status": "new",
+        "date_created": "2017-12-16T10:52:53.034063Z",
+        "date_paid": null,
+        "sum": "6000.00",
+        "payment": "cash"
+    },
+    [
+        {
+            "order_product_uuid": "f8a4c317-b80c-48cd-9063-daa5069d5ce9",
+            "quantity": 1,
+            "value": "3000.00",
+            "order": "80ad25ca-048c-4a01-9ff7-ed690b9cc00f",
+            "product": "561f3505-018f-4352-bcda-c6d00092eea1"
+        },
+        {
+            "order_product_uuid": "4c2a48be-3c40-4fb4-8e21-9b512bd19a9e",
+            "quantity": 3,
+            "value": "1000.00",
+            "order": "80ad25ca-048c-4a01-9ff7-ed690b9cc00f",
+            "product": "c7c6705d-9d18-4a70-a070-004fc5cfbc8e"
+        }
+    ]
+]
+```
+* **Error Response**
+
+| HTTP CODE | HTTP RESPONSE | CODE | MESSAGE | DETAILS | DESCRIPTION
+|---|---|---|---|---|---|
+| 403 | FORBIDDEN | | Authentication credentials were not provided. |  |
+| 404 | NOT FOUND |  | not found |  |

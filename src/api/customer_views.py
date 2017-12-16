@@ -100,7 +100,7 @@ class ProfileUpdatePassword(UpdateAPIView):
 
 
 class ProductList(ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter()
     serializer_class = ProductListSerializer
     pagination_class = StandardPagination
     filter_backends = (filters.DjangoFilterBackend, )
@@ -227,8 +227,6 @@ class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
             return RETURN_OK("product removed")
         except:
             return HTTP500Response(ErrorCodes.BUCKET_PRODUCT_REMOVE_ERROR)
-
-
 
 
 class OrderList(ListAPIView, CreateAPIView):
