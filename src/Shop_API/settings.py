@@ -32,7 +32,6 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'api',
     'rest_framework',
-    'payu',
     'debug_toolbar',
     'django.contrib.admin',
     'django.contrib.auth',

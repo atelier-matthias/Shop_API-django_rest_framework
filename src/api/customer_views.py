@@ -356,21 +356,6 @@ class OrderPayUPayment(UpdateAPIView):
         return Response(ast.literal_eval(res.history[0].text))
 
 
-@api_view(['GET'])
-def hello_world(request):
-    res = User.objects.all()
-    data = []
-
-    for user in res:
-        a = {
-            'imie': user.username,
-            'nowe id': user.id,
-            'mail usera': user.email
-        }
-        data.append(a)
-
-    return Response(data, status=201)
-
 def get_client_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
     if x_forwarded_for:

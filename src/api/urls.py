@@ -44,8 +44,5 @@ customer_routes = [
     # url(r'^stocks/$', customer_views.StockList.as_view()),
 ]
 
-misc_routes = [
-    url(r'^hello/$', customer_views.hello_world, name='hello_world'),
-]
 
-urlpatterns = admin_routes + customer_routes + misc_routes
+urlpatterns = admin_routes + customer_routes

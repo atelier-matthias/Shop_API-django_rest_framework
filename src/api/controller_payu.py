@@ -8,12 +8,7 @@ class PayUGatewayCommands(object):
 
     @classmethod
     def create_order(cls, orderBody):
-        url = cls.get_createOrderUrl()
-        headers = cls.get_createOrderHeaders()
-        data = json.dumps(orderBody)
-        res = requests.request('POST', url, headers=headers, data=data)
-        # res = requests.post(url, headers=headers, data=data)
-        return res
+        return requests.post(cls.get_createOrderUrl(), headers=cls.get_createOrderHeaders(), data=json.dumps(orderBody))
 
     @classmethod
     def get_createOrderHeaders(cls):
