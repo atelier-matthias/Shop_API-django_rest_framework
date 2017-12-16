@@ -217,13 +217,18 @@ class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         res = self.get_object()
 
-        with transaction.atomic():
-            stock = Stock.objects.get(product_code=res.product_id)
-            stock.in_reservation = stock.in_reservation - res.quantity
-            stock.quantity = stock.quantity + res.quantity
-            stock.save()
+        try:
+            with transaction.atomic():
+                stock = Stock.objects.get(product_code=res.product_id)
+                stock.in_reservation = stock.in_reservation - res.quantity
+                stock.quantity = stock.quantity + res.quantity
+                stock.save()
+            super(BucketProductUpdate, self).destroy(request, *args, **kwargs)
+            return RETURN_OK("product removed")
+        except:
+            return HTTP500Response(ErrorCodes.BUCKET_PRODUCT_REMOVE_ERROR)
 
-        return super(BucketProductUpdate, self).destroy(request, *args, **kwargs)
+
 
 
 class OrderList(ListAPIView, CreateAPIView):

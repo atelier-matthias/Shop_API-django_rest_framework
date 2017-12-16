@@ -27,6 +27,7 @@ class ErrorCodes(dict):
 
     BUCKET_IS_EMPTY = ("bucket is empty", 1083)
     ADD_PRODUCT_TO_BUCKET_ERROR = ('product not added to bucker', 1084)
+    BUCKET_PRODUCT_REMOVE_ERROR = ('bucket product remove error', 1085)
 
     EMAIL_ALREADY_REGISTERED = ('email already used', 2001)
 

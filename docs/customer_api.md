@@ -204,11 +204,62 @@ Where:
 
 **Update quantity products to bucket**
 
-TODO
+*   **URL**
+    **POST** <_/api/bucket/`:bucket_uuid`_>
+    
+*   **BODY**
 
-**Remove products to bucket**
+```json
+{
+    "quantity": null
+}
+```   
 
-TODO
+Where:
+
+| Field  | Type | Required | Description  |
+|---|---|---|---|
+| `quantity`  | INT | TRUE | number of quantity which user want to buy  | If value == 0 -> destroy
+
+
+* **Success response**
+    * **CODE** 200
+    
+```json
+{
+    "quantity": 2
+}
+```
+* **Error Response**
+
+| HTTP CODE | HTTP RESPONSE | CODE | MESSAGE | DETAILS | DESCRIPTION
+|---|---|---|---|---|---|
+| 403 | FORBIDDEN | | Authentication credentials were not provided. |  |
+| 409 | CONFLICT | 1043 | not enough products in magazines |  |
+
+
+**Remove products from bucket**
+
+*   **URL**
+    **DELETE** <_/api/bucket/`:bucket_uuid`_>
+
+* **Success response**
+    * **CODE** 200
+    
+```json
+{
+    "status": "OK",
+    "message": "product removed"
+}
+```
+
+* **Error Response**
+
+| HTTP CODE | HTTP RESPONSE | CODE | MESSAGE | DETAILS | DESCRIPTION
+|---|---|---|---|---|---|
+| 403 | FORBIDDEN | | Authentication credentials were not provided. |  |
+| 404 | NOT FOUND | | not found |  |
+
 
 **Create Order**
 

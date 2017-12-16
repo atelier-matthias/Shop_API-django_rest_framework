@@ -37,7 +37,7 @@ class AdminOrdersSerializers(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ('status', 'order_uuid', 'customer', 'shop', 'sum', 'date_paid')
+        fields = ('status', 'order_uuid', 'customer', 'sum', 'date_paid')
 
 
 class AdminStockListSerializer(serializers.ModelSerializer):
