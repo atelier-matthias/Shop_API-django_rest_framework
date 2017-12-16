@@ -110,31 +110,16 @@ class AdminOrderDetails(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'order_uuid'
 
     def get(self, request, *args, **kwargs):
-        res = dict()
-
-        order = self.get_object()
-        serializer = self.get_serializer(order).data
-
-        res['status'] = order.status
-        res['uuid'] = order.order_uuid
-        res['date_paid'] = order.date_paid
-        res['customer'] = {
-            'email': order.customer.email,
-            'first_name': order.customer.first_name,
-            'uuid': order.customer.pk
-        }
-        res['sum'] = serializer['sum']
-        res['shop'] = {
-            'name': order.shop.name,
-            'status': order.shop.status,
-            'shop_uuid': order.shop.pk
-        }
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        res = OrderProducts.objects.filter(order=instance)
 
         self.serializer_class = AdminOrderProductSerializer
-        orderProducts = OrderProducts.objects.select_related('order')
-        res['products'] = [self.get_serializer(o).data for o in orderProducts]
+        products = []
+        for item in res:
+            products.append(self.get_serializer(item).data)
 
-        return Response(res, 200)
+        return Response([serializer.data, products])
 
 
 class AdminOrderSetPaid(RetrieveUpdateAPIView):

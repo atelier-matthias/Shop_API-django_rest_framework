@@ -100,7 +100,7 @@ class ProfileUpdatePassword(UpdateAPIView):
 
 
 class ProductList(ListAPIView):
-    queryset = Product.objects.all()
+    queryset = Product.objects.filter()
     serializer_class = ProductListSerializer
     pagination_class = StandardPagination
     filter_backends = (filters.DjangoFilterBackend, )
@@ -191,6 +191,43 @@ class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, ]
     lookup_url_kwarg = 'bucket_uuid'
 
+    def put(self, request, *args, **kwargs):
+        res = self.get_object()
+        new_quantity = int(request.data['quantity'])
+
+        if new_quantity == 0:
+            return self.destroy(request, *args, **kwargs)
+
+        if res.quantity == new_quantity:
+            return super(BucketProductUpdate, self).put(request, *args, **kwargs)
+
+        stock = Stock.objects.get(product_code=res.product_id)
+        if res.quantity < new_quantity and stock.quantity < new_quantity - res.quantity:
+            return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
+
+        else:
+            with transaction.atomic():
+                stock = Stock.objects.get(product_code=res.product_id)
+                stock.quantity = stock.quantity + res.quantity - new_quantity
+                stock.in_reservation = stock.in_reservation - res.quantity + new_quantity
+                stock.save()
+
+            return super(BucketProductUpdate, self).put(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        res = self.get_object()
+
+        try:
+            with transaction.atomic():
+                stock = Stock.objects.get(product_code=res.product_id)
+                stock.in_reservation = stock.in_reservation - res.quantity
+                stock.quantity = stock.quantity + res.quantity
+                stock.save()
+            super(BucketProductUpdate, self).destroy(request, *args, **kwargs)
+            return RETURN_OK("product removed")
+        except:
+            return HTTP500Response(ErrorCodes.BUCKET_PRODUCT_REMOVE_ERROR)
+
 
 class OrderList(ListAPIView, CreateAPIView):
     serializer_class = OrderListSerializer
@@ -217,16 +254,20 @@ class OrderList(ListAPIView, CreateAPIView):
             }
             serializer = self.get_serializer(data=order)
             serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
             headers = self.get_success_headers(serializer.data)
             with transaction.atomic():
                 try:
-                    self.perform_create(serializer)
                     for item in bucket:
+                        s = Stock.objects.get(product_code=item.product_id)
+                        s.in_reservation = s.in_reservation - item.quantity
                         o = OrderProducts(order=serializer.instance,
                                           quantity=item.quantity,
                                           product=item.product,
                                           value=item.value)
+                        s.save()
                         o.save()
+
                     ShopBucket.objects.filter(customer=self.request.user.uuid).delete()
                     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
                 except:
@@ -250,6 +291,32 @@ class OrderDetails(RetrieveAPIView):
             products.append(self.get_serializer(item).data)
 
         return Response([serializer.data, products])
+
+
+class OrderSetCanceled(UpdateAPIView):
+    queryset = Order.objects.filter()
+    serializer_class = OrderDetailsSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'order_uuid'
+
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        products = OrderProducts.objects.filter(order=instance)
+        if instance.status == Order.ERROR or instance.status == Order.RETURNED:
+            return HTTP409Response(ErrorCodes.WRONG_ORDER_STATUS)
+        else:
+            try:
+                with transaction.atomic():
+                    for item in products:
+                        stock = Stock.objects.get(product_code=item.product_id)
+                        stock.quantity = stock.quantity + item.quantity
+                        stock.save()
+                    order = Order.objects.get(order_uuid=instance.pk)
+                    order.status = Order.RETURNED
+                    order.save()
+                return RETURN_OK('order returned')
+            except:
+                return HTTP500Response(ErrorCodes.ORDER_STATUS_UPDATE_ERROR)
 
 
 @api_view(['GET'])
