@@ -293,6 +293,32 @@ class OrderDetails(RetrieveAPIView):
         return Response([serializer.data, products])
 
 
+class OrderSetCanceled(UpdateAPIView):
+    queryset = Order.objects.filter()
+    serializer_class = OrderDetailsSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'order_uuid'
+
+    def put(self, request, *args, **kwargs):
+        instance = self.get_object()
+        products = OrderProducts.objects.filter(order=instance)
+        if instance.status == Order.ERROR or instance.status == Order.RETURNED:
+            return HTTP409Response(ErrorCodes.WRONG_ORDER_STATUS)
+        else:
+            try:
+                with transaction.atomic():
+                    for item in products:
+                        stock = Stock.objects.get(product_code=item.product_id)
+                        stock.quantity = stock.quantity + item.quantity
+                        stock.save()
+                    order = Order.objects.get(order_uuid=instance.pk)
+                    order.status = Order.RETURNED
+                    order.save()
+                return RETURN_OK('order returned')
+            except:
+                return HTTP500Response(ErrorCodes.ORDER_STATUS_UPDATE_ERROR)
+
+
 @api_view(['GET'])
 def hello_world(request):
     res = User.objects.all()

@@ -392,3 +392,38 @@ Where:
 |---|---|---|---|---|---|
 | 403 | FORBIDDEN | | Authentication credentials were not provided. |  |
 | 404 | NOT FOUND |  | not found |  |
+
+
+**Set Order Status Returned**
+
+**Set Order Status Returned**
+
+*   **URL**
+    **POST** <_/api/orders/`:order_uuid`/set_canceled_>
+    
+*   **NO BODY NEED**
+   
+
+Where:
+
+| Field  | Type | Required | Description  |
+|---|---|---|---|
+| `order_uuid`  | STRING | TRUE | order UUID  | 
+
+
+* **Success response**
+    * **CODE** 200
+    
+```json
+{
+    "status": "OK",
+    "message": "updated"
+}
+```
+* **Error Response**
+
+| HTTP CODE | HTTP RESPONSE | CODE | MESSAGE | DETAILS | DESCRIPTION
+|---|---|---|---|---|---|
+| 403 | FORBIDDEN | | Authentication credentials were not provided. |  |
+| 404 | NOT FOUND |  | not found |  |
+| 409 | CONFLICT | 1003 | only status `new`, `to_pay`, `paid` is avaliable to return |  |
