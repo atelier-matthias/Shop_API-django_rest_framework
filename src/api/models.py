@@ -48,6 +48,9 @@ class Stock(models.Model):
     quantity = models.SmallIntegerField(default=0)
     in_reservation = models.SmallIntegerField(default=0)
 
+    def __str__(self):
+        return self.product_code.name
+
 
 class Order(models.Model):
     NEW = 'new'
@@ -79,6 +82,7 @@ class Order(models.Model):
     date_paid = models.DateTimeField(blank=True, null=True)
     sum = models.DecimalField(max_digits=8, decimal_places=2)
     payment = models.CharField(max_length=20, choices=PAYMENT_TYPE, default=CASH)
+    payuID = models.CharField(max_length=100, default='', null=True, blank=True)
 
 
 class ShopBucket(models.Model):

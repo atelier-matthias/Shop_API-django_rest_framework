@@ -11,6 +11,16 @@ class PayUGatewayCommands(object):
         return requests.post(cls.get_createOrderUrl(), headers=cls.get_createOrderHeaders(), data=json.dumps(orderBody))
 
     @classmethod
+    def get_order_status(cls, orderID):
+        order_url = cls.get_createOrderUrl() + orderID
+        return requests.get(order_url, headers=cls.get_createOrderHeaders())
+
+    @classmethod
+    def get_order_transactions(cls, orderID):
+        order_url = cls.get_createOrderUrl() + orderID + '/transactions'
+        return requests.get(order_url, headers=cls.get_createOrderHeaders())
+
+    @classmethod
     def get_createOrderHeaders(cls):
         return {"Content-Type": "application/json", 'Authorization': 'Bearer {}'.format(cls.getToken())}
 
