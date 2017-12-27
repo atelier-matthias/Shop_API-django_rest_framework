@@ -39,6 +39,7 @@ customer_routes = [
     url(r'^orders/(?P<order_uuid>%s)/set_canceled$' % UUID_RE, customer_views.OrderSetCanceled.as_view()),
     url(r'^orders/(?P<order_uuid>%s)/payu' % UUID_RE, customer_views.OrderPayUPayment.as_view()),
     url(r'^orders/(?P<order_uuid>%s)/order_status' % UUID_RE, customer_views.OrderPayUStatus.as_view()),
+    url(r'^orders/(?P<order_uuid>%s)/transactions' % UUID_RE, customer_views.OrderPayUTransactions.as_view()),
 
     url(r'^products/$', customer_views.ProductList.as_view()),
     # url(r'^shops/$', customer_views.ShopList.as_view()),

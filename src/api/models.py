@@ -48,6 +48,9 @@ class Stock(models.Model):
     quantity = models.SmallIntegerField(default=0)
     in_reservation = models.SmallIntegerField(default=0)
 
+    def __str__(self):
+        return self.product_code.name
+
 
 class Order(models.Model):
     NEW = 'new'

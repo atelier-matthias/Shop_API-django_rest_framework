@@ -285,12 +285,18 @@ class OrderDetails(RetrieveAPIView):
         serializer = self.get_serializer(instance)
         res = OrderProducts.objects.filter(order=instance)
 
-        self.serializer_class = OrderProductsSerializer
         products = []
         for item in res:
-            products.append(self.get_serializer(item).data)
+            p = {
+                'order_product_uuid': item.pk,
+                'quantity': item.quantity,
+                'value': item.value,
+                'product_uuid': item.product_id,
+                'product_name': item.product.name
+            }
+            products.append(p)
 
-        return Response([serializer.data, products])
+        return RETURN_OK([serializer.data, {'products': products}])
 
 
 class OrderSetCanceled(UpdateAPIView):
@@ -367,6 +373,18 @@ class OrderPayUStatus(RetrieveAPIView, DefaultCommands):
     def get(self, request, *args, **kwargs):
         instance = self.get_object()
         res = PayUGatewayCommands.get_order_status(instance.payuID)
+        return Response(self.str2dict(res.text))
+
+
+class OrderPayUTransactions(RetrieveAPIView, DefaultCommands):
+    queryset = Order.objects.filter()
+    serializer_class = OrderDetailsSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'order_uuid'
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        res = PayUGatewayCommands.get_order_transactions(instance.payuID)
         return Response(self.str2dict(res.text))
 
 
