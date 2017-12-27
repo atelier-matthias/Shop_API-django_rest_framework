@@ -1,15 +1,12 @@
-import ast
 from datetime import datetime
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view
 from rest_framework.authentication import authenticate
 from django.contrib.auth import login, logout
 from django.conf import settings
 from django_filters import rest_framework as filters
-from django.contrib.auth.models import User
 from django.middleware.csrf import get_token
 from django.db import transaction
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView, \
@@ -17,13 +14,13 @@ from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView,
 from .customer_serializers import UserDetailsSerializer, ProductListSerializer, \
     ShopListSerializer, OrderListSerializer, UserLoginSerializer, UserRegisterSerializer, \
     UserUpdateDetailsSerializer, UserUpdatePasswordSerializer, UserBucketDetailsSerializer, \
-    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer ,OrderDetailsSerializer, \
-    OrderProductsSerializer
+    UserBucketAddProductSerializer, UserBucketProductQuantityUpdateSerializer, \
+    OrderDetailsSerializer, OrderProductsSerializer
 from .controller_pagination import StandardPagination
-
 from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProducts, Stock
 from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes, RETURN_OK
 from .controller_payu import PayUGatewayCommands
+from .helpers import DefaultCommands
 
 
 class UserLogin(GenericAPIView):
@@ -322,7 +319,7 @@ class OrderSetCanceled(UpdateAPIView):
                 return HTTP500Response(ErrorCodes.ORDER_STATUS_UPDATE_ERROR)
 
 
-class OrderPayUPayment(UpdateAPIView):
+class OrderPayUPayment(UpdateAPIView, DefaultCommands):
     queryset = Order.objects.filter()
     serializer_class = OrderDetailsSerializer
     permission_classes = [IsAuthenticated, ]
@@ -343,6 +340,7 @@ class OrderPayUPayment(UpdateAPIView):
 
         order = {
                 "notifyUrl": "https://your.eshop.com/notify",
+                "orderUuid": str(instance.pk),
                 "customerIp": str(get_client_ip(request)),
                 "merchantPosId": str(settings.PAYU_MERCHANT_KEY),
                 "description": "TEST_SHOP",
@@ -352,8 +350,24 @@ class OrderPayUPayment(UpdateAPIView):
             }
 
         res = PayUGatewayCommands.create_order(orderBody=order)
+        response = self.str2dict(res.history[0].text)
+        with transaction.atomic():
+            instance.payuID = response['orderId']
+            instance.save()
 
-        return Response(ast.literal_eval(res.history[0].text))
+        return RETURN_OK(response)
+
+
+class OrderPayUStatus(RetrieveAPIView, DefaultCommands):
+    queryset = Order.objects.filter()
+    serializer_class = OrderDetailsSerializer
+    permission_classes = [IsAuthenticated, ]
+    lookup_url_kwarg = 'order_uuid'
+
+    def get(self, request, *args, **kwargs):
+        instance = self.get_object()
+        res = PayUGatewayCommands.get_order_status(instance.payuID)
+        return Response(self.str2dict(res.text))
 
 
 def get_client_ip(request):
