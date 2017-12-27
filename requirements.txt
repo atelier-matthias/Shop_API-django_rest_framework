@@ -1,7 +1,8 @@
 Django>=1.11, <2.0
-djangorestframework==3.6.4
+djangorestframework==3.7
 django-debug-toolbar
 django-allauth
 django-suit==0.2.25
 django-stdimage
 django-model-utils
+django_filters

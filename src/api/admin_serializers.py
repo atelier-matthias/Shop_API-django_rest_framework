@@ -9,8 +9,10 @@ class AdminCustomerUpdateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def update(self, instance, validated_data):
-        instance.set_password(instance.password)
-        return instance
+        user = super(AdminCustomerUpdateSerializer, self).update(instance, validated_data)
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class AdminShopBucketSerializer(serializers.ModelSerializer):
@@ -19,27 +21,38 @@ class AdminShopBucketSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class AdminShopSerializer(serializers.RelatedField):
-    def to_representation(self, value):
-        return value.name
-
-
-class AdminProductSerializer(serializers.RelatedField):
-    def to_representation(self, value):
-        return value.name
+class AdminShopSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Shop
+        fields = ('name', 'status', 'shop_uuid')
 
 
 class AdminOrderProductSerializer(serializers.ModelSerializer):
-    product = AdminProductSerializer(many=False, read_only=True)
     class Meta:
         model = OrderProducts
         fields = ('product', 'quantity', 'value')
 
 
 class AdminOrdersSerializers(serializers.ModelSerializer):
-    ordered_products = AdminOrderProductSerializer(many=True, read_only=True)
-    shop = AdminShopSerializer(read_only=True)
 
     class Meta:
         model = Order
-        fields = ('status', 'order_uuid', 'customer', 'shop', 'sum', 'ordered_products')
+        fields = ('status', 'order_uuid', 'customer', 'sum', 'date_paid')
+
+
+class AdminStockListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = '__all__'
+
+
+class AdminStockUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Stock
+        fields = ('quantity', 'in_reservation')
+
+
+class AdminOrderStatusSetPaidSerialize(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = ('date_paid', 'status')
