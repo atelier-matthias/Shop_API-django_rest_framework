@@ -4,7 +4,6 @@ from .customer_serializers import UserBucketAddProductSerializer
 from django.db import transaction
 
 
-
 class CustomerProductListCommand(DefaultCommands):
     @classmethod
     def execute(cls, serializer):
@@ -33,7 +32,6 @@ class CustomerProductListCommand(DefaultCommands):
 class CustomerAddProductToBucketCommand(DefaultCommands):
     @classmethod
     def execute(cls, request, *args, **kwargs):
-        stock = kwargs.get('stock')
         res = {}
 
         product = Product.objects.get(product_uuid=request.data['product'])
@@ -43,14 +41,41 @@ class CustomerAddProductToBucketCommand(DefaultCommands):
         res['product'] = product.product_uuid
         res['value'] = product.price
 
-        # serializer_class = UserBucketAddProductSerializer(data=res)
         serializer = UserBucketAddProductSerializer(data=res)
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
-            Stock.objects.filter(stock_uuid=stock.pk).update(quantity=stock.quantity - int(request.data['quantity']),
-                                                             in_reservation=stock.in_reservation + int(
-                                                                 request.data['quantity']))
+            stock = Stock.objects.get(product_code=request.data['product'])
+            stock.quantity = stock.quantity - int(request.data['quantity'])
+            stock.in_reservation = stock.in_reservation + int(request.data['quantity'])
+            stock.save()
+
             serializer.save()
 
         return res
+
+
+class CustomerBucketProductUpdateCommand(DefaultCommands):
+    @classmethod
+    def execute(cls, *args, **kwargs):
+        res = kwargs.get('obj')
+        new_quantity = kwargs.get('new_quantity')
+
+        with transaction.atomic():
+            stock = Stock.objects.get(product_code=res.product_id)
+            stock.quantity = stock.quantity + res.quantity - new_quantity
+            stock.in_reservation = stock.in_reservation - res.quantity + new_quantity
+            stock.save()
+
+
+class CustomerBucketProductRemoveCommand(DefaultCommands):
+    @classmethod
+    def execute(cls, **kwargs):
+        obj = kwargs.get('obj')
+
+        with transaction.atomic():
+            stock = Stock.objects.get(product_code=obj.product_id)
+            stock.in_reservation = stock.in_reservation - obj.quantity
+            stock.quantity = stock.quantity + obj.quantity
+            stock.save()
+        pass
