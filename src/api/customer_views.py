@@ -21,6 +21,7 @@ from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProd
 from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes, RETURN_OK
 from .controller_payu import PayUGatewayCommands
 from .helpers import DefaultCommands
+from .commands_product import CustomerProductListCommand, CustomerAddProductToBucketCommand
 
 
 class UserLogin(GenericAPIView):
@@ -107,29 +108,15 @@ class ProductList(ListAPIView):
     filter_fields = ('name', 'product_type')
 
     def get(self, request, *args, **kwargs):
-        response = {}
-        stocks = []
         queryset = self.filter_queryset(self.get_queryset())
-
         page = self.paginate_queryset(queryset)
+
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            for item in serializer.data:
-                response[item['product_uuid']] = {
-                    'status': item['status'],
-                    'name': item['name'],
-                    'description': item['description'],
-                    'price': item['price'],
-                    'product_type': item['product_type'],
-                    'quantity': 0
-                }
-                stocks.append(str(item['product_uuid']))
 
-            res = Stock.objects.filter(product_code__in=stocks)
-            for item in res:
-                response[str(item.product_code_id)]['quantity'] = item.quantity
+            res = CustomerProductListCommand.execute(serializer=serializer)
 
-            return self.get_paginated_response(response)
+            return self.get_paginated_response(res)
 
         serializer = self.get_serializer(queryset, many=True)
 
@@ -161,24 +148,12 @@ class BucketsProductsList(ListAPIView, CreateAPIView):
             return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
 
         else:
-            res = {}
-
-            product = Product.objects.get(product_uuid=self.request.data['product'])
-
-            res['customer'] = self.request.user.uuid
-            res['quantity'] = self.request.data['quantity']
-            res['product'] = product.product_uuid
-            res['value'] = product.price
-            self.serializer_class = UserBucketAddProductSerializer
-            serializer = self.get_serializer(data=res)
-            serializer.is_valid(raise_exception=True)
+            params = {
+                'stock': stock
+            }
 
             try:
-                with transaction.atomic():
-                    Stock.objects.filter(stock_uuid=stock.pk).update(quantity=stock.quantity-int(request.data['quantity']),
-                                                                       in_reservation=stock.in_reservation+int(request.data['quantity']))
-                    self.perform_create(serializer)
-
+                res = CustomerAddProductToBucketCommand.execute(request=self.request, **params)
                 headers = self.get_success_headers(res)
                 return Response(res, status=status.HTTP_201_CREATED, headers=headers)
             except:
