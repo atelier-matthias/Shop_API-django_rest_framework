@@ -21,7 +21,8 @@ from .models import Product, Shop, Order, CustomerProfile, ShopBucket, OrderProd
 from .error_codes import HTTP500Response, HTTP404Response, HTTP409Response, ErrorCodes, RETURN_OK
 from .controller_payu import PayUGatewayCommands
 from .helpers import DefaultCommands
-from .commands_product import CustomerProductListCommand, CustomerAddProductToBucketCommand
+from .customer_commands import CustomerProductListCommand, CustomerAddProductToBucketCommand, CustomerBucketProductUpdateCommand, \
+    CustomerBucketProductRemoveCommand
 
 
 class UserLogin(GenericAPIView):
@@ -148,12 +149,8 @@ class BucketsProductsList(ListAPIView, CreateAPIView):
             return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
 
         else:
-            params = {
-                'stock': stock
-            }
-
             try:
-                res = CustomerAddProductToBucketCommand.execute(request=self.request, **params)
+                res = CustomerAddProductToBucketCommand.execute(request=self.request)
                 headers = self.get_success_headers(res)
                 return Response(res, status=status.HTTP_201_CREATED, headers=headers)
             except:
@@ -167,37 +164,42 @@ class BucketProductUpdate(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'bucket_uuid'
 
     def put(self, request, *args, **kwargs):
-        res = self.get_object()
+        obj = self.get_object()
         new_quantity = int(request.data['quantity'])
 
         if new_quantity == 0:
             return self.destroy(request, *args, **kwargs)
 
-        if res.quantity == new_quantity:
+        if obj.quantity == new_quantity:
             return super(BucketProductUpdate, self).put(request, *args, **kwargs)
 
-        stock = Stock.objects.get(product_code=res.product_id)
-        if res.quantity < new_quantity and stock.quantity < new_quantity - res.quantity:
+        stock = Stock.objects.get(product_code=obj.product_id)
+        if obj.quantity < new_quantity and stock.quantity < new_quantity - obj.quantity:
             return HTTP409Response(ErrorCodes.NOT_ENOUGH_PRODUCTS_IN_MAGAZINES)
 
         else:
-            with transaction.atomic():
-                stock = Stock.objects.get(product_code=res.product_id)
-                stock.quantity = stock.quantity + res.quantity - new_quantity
-                stock.in_reservation = stock.in_reservation - res.quantity + new_quantity
-                stock.save()
 
-            return super(BucketProductUpdate, self).put(request, *args, **kwargs)
+            try:
+                params = {
+                    'new_quantity': new_quantity,
+                    'obj': obj
+                }
+ 
+                CustomerBucketProductUpdateCommand.execute(**params)
+                super(BucketProductUpdate, self).put(request, *args, **kwargs)
+                return RETURN_OK("product updated")
+
+            except:
+                return HTTP500Response(ErrorCodes.BUCKET_PRODUCT_UPDATE_ERROR)
 
     def destroy(self, request, *args, **kwargs):
         res = self.get_object()
-
         try:
-            with transaction.atomic():
-                stock = Stock.objects.get(product_code=res.product_id)
-                stock.in_reservation = stock.in_reservation - res.quantity
-                stock.quantity = stock.quantity + res.quantity
-                stock.save()
+            params = {
+                'obj': res
+            }
+
+            CustomerBucketProductRemoveCommand.execute(**params)
             super(BucketProductUpdate, self).destroy(request, *args, **kwargs)
             return RETURN_OK("product removed")
         except:
